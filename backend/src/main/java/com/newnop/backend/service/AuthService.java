@@ -5,6 +5,7 @@ import com.newnop.backend.dtos.request.RegisterRequest;
 import com.newnop.backend.dtos.response.AuthResponse;
 
 public interface AuthService {
-    AuthResponse register(RegisterRequest request);
-    AuthResponse login(LoginRequest request);
+  AuthResponse register(RegisterRequest request);
+
+  AuthResponse login(LoginRequest request);
 }

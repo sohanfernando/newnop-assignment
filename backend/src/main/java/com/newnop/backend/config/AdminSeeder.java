@@ -15,32 +15,33 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AdminSeeder implements CommandLineRunner {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.admin.username}")
-    private String adminUsername;
+  @Value("${app.admin.username}")
+  private String adminUsername;
 
-    @Value("${app.admin.email}")
-    private String adminEmail;
+  @Value("${app.admin.email}")
+  private String adminEmail;
 
-    @Value("${app.admin.password}")
-    private String adminPassword;
+  @Value("${app.admin.password}")
+  private String adminPassword;
 
-    @Override
-    public void run(String... args) {
-        if (userRepository.existsByEmail(adminEmail)) {
-            return;
-        }
-
-        User admin = User.builder()
-                .username(adminUsername)
-                .email(adminEmail)
-                .password(passwordEncoder.encode(adminPassword))
-                .role(Role.ADMIN)
-                .build();
-
-        userRepository.save(admin);
-        log.info("Seeded default admin account: {}", adminEmail);
+  @Override
+  public void run(String... args) {
+    if (userRepository.existsByEmail(adminEmail)) {
+      return;
     }
+
+    User admin =
+        User.builder()
+            .username(adminUsername)
+            .email(adminEmail)
+            .password(passwordEncoder.encode(adminPassword))
+            .role(Role.ADMIN)
+            .build();
+
+    userRepository.save(admin);
+    log.info("Seeded default admin account: {}", adminEmail);
+  }
 }

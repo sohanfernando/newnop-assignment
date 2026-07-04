@@ -5,19 +5,34 @@ A full-stack task tracker with JWT authentication, role-based access control (Us
 - **Backend**: Spring Boot 4.1.0 (Java 21), Spring Security, Spring Data JPA, MySQL, JWT, STOMP-over-WebSocket
 - **Frontend**: React 19 + TypeScript, Vite, Tailwind CSS v4, React Router, Axios, STOMP/SockJS client
 - **Containerized**: `docker compose up --build` runs the whole stack (MySQL + backend + frontend) with one command
+- **Live on Azure**: deployed and auto-redeployed on every push to `main` — see [Live Deployment](#live-deployment)
 
 ## Contents
 
+- [Live Deployment](#live-deployment)
 - [Setup Instructions](#setup-instructions)
 - [Running with Docker](#running-with-docker)
 - [Default Admin Account](#default-admin-account)
 - [Running Tests](#running-tests)
-- [CI Pipeline](#ci-pipeline)
+- [CI/CD Pipeline](#cicd-pipeline)
 - [API Overview](#api-overview)
 - [API Documentation (Postman)](#api-documentation-postman)
 - [Design Decisions](#design-decisions)
 - [Assumptions](#assumptions)
 - [Future Improvements](#future-improvements)
+
+## Live Deployment
+
+The app is deployed on Azure and stays in sync with `main` automatically:
+
+- **Frontend**: https://tasktracker-frontend-sohan.azurewebsites.net
+- **Backend**: https://tasktracker-backend-sohan.azurewebsites.net
+
+Log in with the [seeded admin account](#default-admin-account) to see Admin-only functionality, or register a new account.
+
+**Infrastructure** (Azure, resource group `tasktracker-rg`): Azure Container Registry (image storage) + App Service Plan (Linux, B1) running two Web Apps for Containers (backend, frontend-via-nginx) + Azure Database for MySQL Flexible Server (Burstable B1ms). Provisioned via the Azure CLI; see [CI/CD Pipeline](#cicd-pipeline) for how deploys happen.
+
+> This is a demo deployment for assignment review, not a production setup — the MySQL server's firewall is open to all IPs for simplicity, secrets are stored as GitHub Actions/App Service secrets rather than a dedicated vault, and the resource group may be deleted after review to stop billing against the Azure free-trial credit.
 
 ## Setup Instructions
 
@@ -115,12 +130,15 @@ cd frontend
 npm test
 ```
 
-## CI Pipeline
+## CI/CD Pipeline
 
-`.github/workflows/ci.yml` runs on every push and pull request, with two parallel jobs:
+`.github/workflows/ci.yml` runs on every push and pull request, with four jobs:
 
-- **Backend**: installs dependencies (`mvnw dependency:go-offline`), lints (`mvnw spotless:check`, Google Java Format via Spotless), then runs the full test suite (`mvnw test`).
-- **Frontend**: installs dependencies (`npm ci`), lints (`npm run lint`, oxlint), runs tests (`npm test`), then does a production build as an extra safety net.
+- **`backend`**: installs dependencies (`mvnw dependency:go-offline`), lints (`mvnw spotless:check`, Google Java Format via Spotless), then runs the full test suite (`mvnw test`).
+- **`frontend`**: installs dependencies (`npm ci`), lints (`npm run lint`, oxlint), runs tests (`npm test`), then does a production build as an extra safety net.
+- **`deploy-backend`** / **`deploy-frontend`** (CD): only run on a **push to `main`** (never on pull requests), and only after their corresponding test job passes (`needs:`). Each logs into Azure and ACR, builds a fresh Docker image tagged both `:latest` and with the commit SHA, pushes both tags to Azure Container Registry, then restarts the corresponding Azure Web App so it pulls the new image. `deploy-frontend` also depends on `deploy-backend` finishing first, since its build bakes in the backend's URL.
+
+Azure authentication uses a Service Principal (repo secret `AZURE_CREDENTIALS`, scoped to just the `tasktracker-rg` resource group via the `azure/login` action) plus ACR admin credentials (`ACR_USERNAME` / `ACR_PASSWORD`) for `docker/login-action`. None of these are committed — they're GitHub Actions repository secrets.
 
 ## API Overview
 
@@ -154,6 +172,7 @@ A Postman collection and environment covering every endpoint above are provided 
 - **Task view/create/edit as modals, not separate routes**: matches a design mockup provided mid-project; still satisfies "view task details" as a UI concept without the overhead of extra routes for what's fundamentally one page (the task list) with overlays.
 - **Backend code style**: Spotless + Google Java Format enforced in CI, not just a local convention.
 - **Docker Compose over Kubernetes/etc.**: three services (MySQL, backend, frontend-via-nginx) with multi-stage Dockerfiles, host ports overridable via env vars (`MYSQL_HOST_PORT`, `BACKEND_HOST_PORT`, `FRONTEND_HOST_PORT`) so it doesn't collide with a locally-running MySQL/backend/frontend. The frontend's `VITE_API_BASE_URL` is baked in at build time (defaults to `http://localhost:8080`), which is correct as long as the backend's *host* port is left at its default — this is a build-time static-site constraint, not something Compose can override at container-start like the backend's env vars.
+- **Azure App Service for Containers over Kubernetes/Container Apps**: reuses the same Dockerfiles built for local Docker Compose with zero changes, and the same env-var-driven config (`DB_URL`, `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, etc.) just gets set as Azure Web App settings instead of Compose environment variables — one config mechanism, two places it's supplied. `CorsConfig` was changed from a hardcoded localhost allowlist to reading `CORS_ALLOWED_ORIGINS` for exactly this reason: the deployed frontend's real origin needs to be allowed without a code change per environment.
 
 ## Assumptions
 
@@ -175,5 +194,5 @@ With more time, in rough priority order:
 4. **Rate limiting** on `/api/auth/**` to slow down credential-stuffing attempts.
 5. **A dedicated stats endpoint** instead of three separate count queries.
 6. **Free-text search** on task title/description, backed by a real query parameter.
-7. **Deployment + CD pipeline** — bonus/optional items not attempted here (containerization, above, was).
+7. **Harden the deployment**: restrict the MySQL firewall to just the backend's outbound IPs instead of allow-all, move secrets into Azure Key Vault, enable `httpsOnly` enforcement and a custom domain with a managed certificate.
 8. **End-to-end tests** (e.g. Playwright) as an additional CI stage, covering the real-time update flow across two simulated browser sessions (done manually during development, not automated in CI).

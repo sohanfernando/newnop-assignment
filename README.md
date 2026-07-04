@@ -4,10 +4,12 @@ A full-stack task tracker with JWT authentication, role-based access control (Us
 
 - **Backend**: Spring Boot 4.1.0 (Java 21), Spring Security, Spring Data JPA, MySQL, JWT, STOMP-over-WebSocket
 - **Frontend**: React 19 + TypeScript, Vite, Tailwind CSS v4, React Router, Axios, STOMP/SockJS client
+- **Containerized**: `docker compose up --build` runs the whole stack (MySQL + backend + frontend) with one command
 
 ## Contents
 
 - [Setup Instructions](#setup-instructions)
+- [Running with Docker](#running-with-docker)
 - [Default Admin Account](#default-admin-account)
 - [Running Tests](#running-tests)
 - [CI Pipeline](#ci-pipeline)
@@ -47,6 +49,22 @@ npm run dev
 ```
 
 The app starts on `http://localhost:5173` and expects the backend at `http://localhost:8080` (see [environment configuration](#environment-configuration) to change this).
+
+## Running with Docker
+
+As an alternative to running Java/Node/MySQL locally, the whole stack (MySQL + backend + frontend) can be brought up with one command:
+
+```bash
+docker compose up --build
+```
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+- MySQL: `localhost:3306` (persisted in a named volume, `mysql_data`)
+
+Each service's host port can be overridden via environment variables if any of the defaults conflict with something already running on your machine — e.g. `MYSQL_HOST_PORT=3307 BACKEND_HOST_PORT=8081 FRONTEND_HOST_PORT=5174 docker compose up --build`. The database credentials, JWT secret, and admin account can also be overridden the same way as the [environment configuration](#environment-configuration) below (e.g. `DB_PASSWORD=...`, `JWT_SECRET=...`).
+
+Tear down with `docker compose down` (add `-v` to also delete the MySQL volume and start fresh next time).
 
 ### Environment configuration
 
@@ -135,6 +153,7 @@ A Postman collection and environment covering every endpoint above are provided 
 - **Frontend state**: React Context for auth (`AuthContext`, token persisted in `localStorage`) and toast notifications (`ToastContext`); no external state-management library — the app is small enough that prop drilling plus two contexts is simpler than adding Redux/Zustand.
 - **Task view/create/edit as modals, not separate routes**: matches a design mockup provided mid-project; still satisfies "view task details" as a UI concept without the overhead of extra routes for what's fundamentally one page (the task list) with overlays.
 - **Backend code style**: Spotless + Google Java Format enforced in CI, not just a local convention.
+- **Docker Compose over Kubernetes/etc.**: three services (MySQL, backend, frontend-via-nginx) with multi-stage Dockerfiles, host ports overridable via env vars (`MYSQL_HOST_PORT`, `BACKEND_HOST_PORT`, `FRONTEND_HOST_PORT`) so it doesn't collide with a locally-running MySQL/backend/frontend. The frontend's `VITE_API_BASE_URL` is baked in at build time (defaults to `http://localhost:8080`), which is correct as long as the backend's *host* port is left at its default — this is a build-time static-site constraint, not something Compose can override at container-start like the backend's env vars.
 
 ## Assumptions
 
@@ -156,5 +175,5 @@ With more time, in rough priority order:
 4. **Rate limiting** on `/api/auth/**` to slow down credential-stuffing attempts.
 5. **A dedicated stats endpoint** instead of three separate count queries.
 6. **Free-text search** on task title/description, backed by a real query parameter.
-7. **Containerization** (Docker Compose for one-command local run: MySQL + backend + frontend) and a deployment/CD pipeline — both were bonus/optional items not attempted here.
+7. **Deployment + CD pipeline** — bonus/optional items not attempted here (containerization, above, was).
 8. **End-to-end tests** (e.g. Playwright) as an additional CI stage, covering the real-time update flow across two simulated browser sessions (done manually during development, not automated in CI).

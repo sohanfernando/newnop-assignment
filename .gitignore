@@ -8,3 +8,9 @@
 
 # Claude Code internal state, not part of the project
 .claude/
+
+# Postman VS Code extension's local workspace scaffold (auto-recreated when
+# opening the collection/environment in-editor) -- the committed JSON files
+# in postman/ are the source of truth, not this
+postman/.postman/
+postman/postman/

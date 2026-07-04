@@ -22,15 +22,25 @@ export function Pagination({ page, totalPages, rangeLabel, onChange }: Paginatio
     }`;
 
   return (
-    <div className="flex items-center justify-between px-7 py-4">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-7 md:py-4">
       <div className="text-[13px] text-(--color-text-muted)">{rangeLabel}</div>
       {totalPages > 1 && (
-        <div className="flex items-center gap-1">
-          <button type="button" disabled={page <= 0} onClick={() => onChange(page - 1)} className={navBtn(page <= 0)}>
+        <div className="flex max-w-full items-center gap-1 overflow-x-auto">
+          <button
+            type="button"
+            disabled={page <= 0}
+            onClick={() => onChange(page - 1)}
+            className={`shrink-0 ${navBtn(page <= 0)}`}
+          >
             Prev
           </button>
           {pageNumbers.map((n) => (
-            <button key={n} type="button" onClick={() => onChange(n - 1)} className={pageBtn(n === current)}>
+            <button
+              key={n}
+              type="button"
+              onClick={() => onChange(n - 1)}
+              className={`shrink-0 ${pageBtn(n === current)}`}
+            >
               {n}
             </button>
           ))}
@@ -38,7 +48,7 @@ export function Pagination({ page, totalPages, rangeLabel, onChange }: Paginatio
             type="button"
             disabled={page >= totalPages - 1}
             onClick={() => onChange(page + 1)}
-            className={navBtn(page >= totalPages - 1)}
+            className={`shrink-0 ${navBtn(page >= totalPages - 1)}`}
           >
             Next
           </button>

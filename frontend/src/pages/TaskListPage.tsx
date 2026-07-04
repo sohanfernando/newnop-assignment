@@ -6,12 +6,13 @@ import { useToast } from '../context/ToastContext';
 import { useTaskSocket } from '../hooks/useTaskSocket';
 import { Sidebar } from '../components/Sidebar';
 import { StatCard } from '../components/StatCard';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusDropdown } from '../components/StatusDropdown';
+import { TaskCard } from '../components/TaskCard';
 import { Pagination } from '../components/Pagination';
 import { TaskViewModal } from '../components/TaskViewModal';
 import { TaskFormModal } from '../components/TaskFormModal';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
-import { formatDate, initials, isOverdue } from '../lib/taskDisplay';
+import { formatDate, initials, isOverdue, statusLabel } from '../lib/taskDisplay';
 import { TASK_STATUSES, type Page, type Task, type TaskStatus } from '../types';
 
 const PAGE_SIZE = 8;
@@ -39,6 +40,7 @@ export function TaskListPage() {
   const [modal, setModal] = useState<Modal>(null);
   const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
   const [flashId, setFlashId] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -132,6 +134,22 @@ export function TaskListPage() {
     }
   }
 
+  async function handleStatusChange(task: Task, newStatus: TaskStatus) {
+    try {
+      const updated = await updateTask(task.id, {
+        title: task.title,
+        description: task.description ?? '',
+        status: newStatus,
+        dueDate: task.dueDate,
+      });
+      pushToast(`Task "${updated.title}" moved to ${statusLabel(newStatus)}.`);
+      loadTasks();
+      loadStats();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  }
+
   const total = tasks?.totalElements ?? 0;
   const pageStart = page * PAGE_SIZE;
   const rangeLabel =
@@ -145,43 +163,57 @@ export function TaskListPage() {
     }`;
 
   return (
-    <div className="flex h-full w-full">
-      <Sidebar />
+    <div className="flex h-full w-full overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <div className="flex items-center justify-between border-b border-(--color-border) px-7 py-5">
-          <div>
-            <h1 className="m-0 text-[21px] font-bold tracking-tight">{isAdmin ? 'All Tasks' : 'My Tasks'}</h1>
-            <p className="mt-0.5 text-[13px] text-(--color-text-muted)">{rangeLabel}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--color-border) px-4 py-4 md:px-7 md:py-5">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+              className="flex shrink-0 items-center rounded-md p-2 text-(--color-text-muted) hover:bg-(--color-bg) md:hidden"
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M2.5 5h15M2.5 10h15M2.5 15h15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+            <div className="min-w-0">
+              <h1 className="m-0 truncate text-lg font-bold tracking-tight md:text-[21px]">
+                {isAdmin ? 'All Tasks' : 'My Tasks'}
+              </h1>
+              <p className="mt-0.5 truncate text-xs text-(--color-text-muted) md:text-[13px]">{rangeLabel}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-[12.5px] font-semibold text-(--color-text-muted)">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden items-center gap-1.5 text-[12.5px] font-semibold text-(--color-text-muted) sm:flex">
               <span className="h-2 w-2 rounded-full bg-(--color-accent) animate-pulse-dot" />
               Live
             </div>
             <button
               type="button"
               onClick={() => setModal({ type: 'create' })}
-              className="flex items-center gap-1.5 rounded-lg bg-(--color-accent) px-4 py-2.5 text-[13.5px] font-bold text-white"
+              className="flex items-center gap-1.5 rounded-lg bg-(--color-accent) px-3 py-2 text-[13px] font-bold text-white md:px-4 md:py-2.5 md:text-[13.5px]"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M7 1v12M1 7h12" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
-              New Task
+              <span className="hidden sm:inline">New Task</span>
             </button>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 px-7 pt-5">
+        <div className="grid grid-cols-3 gap-2 px-4 pt-4 md:gap-3 md:px-7 md:pt-5">
           <StatCard label="To Do" value={counts.TODO} color="var(--color-avatar-text)" />
           <StatCard label="In Progress" value={counts.IN_PROGRESS} color="var(--color-progress-text)" />
           <StatCard label="Done" value={counts.DONE} color="var(--color-done-text)" />
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 px-7 pb-3.5 pt-4.5">
+        <div className="flex flex-wrap items-center gap-2 px-4 pb-3 pt-3.5 md:px-7 md:pb-3.5 md:pt-4.5">
           <button
             type="button"
             onClick={() => {
@@ -225,11 +257,12 @@ export function TaskListPage() {
           )}
         </div>
 
-        {error && <p className="px-7 pb-2 text-sm text-(--color-danger)">{error}</p>}
+        {error && <p className="px-4 pb-2 text-sm text-(--color-danger) md:px-7">{error}</p>}
 
-        {/* Table */}
-        <div className="flex-1 overflow-y-auto px-7">
-          <div className="overflow-hidden rounded-xl border border-(--color-border) bg-(--color-surface)">
+        {/* Task list: table on lg+ screens, cards below that */}
+        <div className="flex-1 overflow-y-auto px-4 md:px-7">
+          {/* Desktop table (xl and up) */}
+          <div className="hidden overflow-hidden rounded-xl border border-(--color-border) bg-(--color-surface) xl:block">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-(--color-border) bg-(--color-bg)">
@@ -266,7 +299,7 @@ export function TaskListPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <StatusBadge task={task} />
+                      <StatusDropdown task={task} onChange={(s) => handleStatusChange(task, s)} />
                     </td>
                     <td
                       className="px-4 py-3 align-top text-[13px] font-semibold"
@@ -337,6 +370,29 @@ export function TaskListPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile/tablet cards (below xl) */}
+          <div className="flex flex-col gap-2.5 xl:hidden">
+            {tasks?.content.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                flashing={flashId === task.id}
+                onView={() => setModal({ type: 'view', task })}
+                onEdit={() => setModal({ type: 'edit', task })}
+                onDelete={() => setDeleteTarget(task)}
+                onStatusChange={(s) => handleStatusChange(task, s)}
+              />
+            ))}
+            {!loading && tasks?.content.length === 0 && (
+              <div className="rounded-xl border border-(--color-border) bg-(--color-surface) px-4 py-16 text-center">
+                <div className="mb-1 text-[15px] font-bold">No tasks match your filters</div>
+                <div className="text-[13px] text-(--color-text-muted)">
+                  Try adjusting your filters, or create a new task.
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

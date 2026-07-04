@@ -5,3 +5,6 @@
 
 # Leftover IDE-generated tooling, not part of the project
 .github/modernize/
+
+# Claude Code internal state, not part of the project
+.claude/

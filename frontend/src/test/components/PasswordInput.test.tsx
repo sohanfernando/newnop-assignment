@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PasswordInput } from './PasswordInput';
+import { PasswordInput } from '../../components/PasswordInput';
 
 describe('PasswordInput', () => {
   it('renders masked by default', () => {

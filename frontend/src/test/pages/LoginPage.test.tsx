@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { LoginPage } from './LoginPage';
-import { AuthProvider } from '../context/AuthContext';
-import * as authApi from '../api/auth';
+import { LoginPage } from '../../pages/LoginPage';
+import { AuthProvider } from '../../context/AuthContext';
+import * as authApi from '../../api/auth';
 
-vi.mock('../api/auth');
+vi.mock('../../api/auth');
 
 function renderLoginPage() {
   return render(

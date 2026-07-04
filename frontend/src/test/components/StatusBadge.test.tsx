@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge } from '../../components/StatusBadge';
 
 describe('StatusBadge', () => {
   it('shows "To Do" for a TODO task due in the future', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { displayStatusLabel, formatDate, initials, isOverdue, statusColors, statusLabel } from './taskDisplay';
-import type { Task } from '../types';
+import { displayStatusLabel, formatDate, initials, isOverdue, statusColors, statusLabel } from '../../lib/taskDisplay';
+import type { Task } from '../../types';
 
 function makeTask(overrides: Partial<Pick<Task, 'status' | 'dueDate'>>): Pick<Task, 'status' | 'dueDate'> {
   return { status: 'TODO', dueDate: '2020-01-01', ...overrides };

@@ -31,6 +31,10 @@ body {
   color: var(--color-text);
 }
 
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 @keyframes toastIn {
   from {
     opacity: 0;

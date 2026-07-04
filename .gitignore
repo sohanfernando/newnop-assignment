@@ -1,0 +1,7 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Leftover IDE-generated tooling, not part of the project
+.github/modernize/

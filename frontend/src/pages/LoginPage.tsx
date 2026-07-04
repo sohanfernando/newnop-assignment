@@ -40,8 +40,11 @@ export function LoginPage() {
         <p className="mb-6 text-sm text-(--color-text-muted)">Sign in to manage your team's tasks.</p>
 
         <form onSubmit={handleSubmit}>
-          <label className="mb-1.5 block text-[13px] font-semibold">Email</label>
+          <label htmlFor="login-email" className="mb-1.5 block text-[13px] font-semibold">
+            Email
+          </label>
           <input
+            id="login-email"
             type="email"
             required
             value={email}
@@ -50,9 +53,17 @@ export function LoginPage() {
             className="mb-4 w-full rounded-lg border border-(--color-border) px-3 py-2.5 text-sm outline-none focus:border-(--color-accent)"
           />
 
-          <label className="mb-1.5 block text-[13px] font-semibold">Password</label>
+          <label htmlFor="login-password" className="mb-1.5 block text-[13px] font-semibold">
+            Password
+          </label>
           <div className="mb-6">
-            <PasswordInput required value={password} onChange={setPassword} placeholder="••••••••" />
+            <PasswordInput
+              id="login-password"
+              required
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+            />
           </div>
 
           {error && <p className="mb-4 text-sm font-medium text-(--color-danger)">{error}</p>}

@@ -7,14 +7,16 @@ interface PasswordInputProps {
   placeholder?: string;
   required?: boolean;
   minLength?: number;
+  id?: string;
 }
 
-export function PasswordInput({ value, onChange, placeholder, required, minLength }: PasswordInputProps) {
+export function PasswordInput({ value, onChange, placeholder, required, minLength, id }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
 
   return (
     <div className="relative">
       <input
+        id={id}
         type={visible ? 'text' : 'password'}
         required={required}
         minLength={minLength}

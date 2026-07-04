@@ -41,8 +41,11 @@ export function RegisterPage() {
         <p className="mb-6 text-sm text-(--color-text-muted)">Set up a workspace for your team.</p>
 
         <form onSubmit={handleSubmit}>
-          <label className="mb-1.5 block text-[13px] font-semibold">Username</label>
+          <label htmlFor="register-username" className="mb-1.5 block text-[13px] font-semibold">
+            Username
+          </label>
           <input
+            id="register-username"
             type="text"
             required
             minLength={3}
@@ -52,8 +55,11 @@ export function RegisterPage() {
             className="mb-4 w-full rounded-lg border border-(--color-border) px-3 py-2.5 text-sm outline-none focus:border-(--color-accent)"
           />
 
-          <label className="mb-1.5 block text-[13px] font-semibold">Email</label>
+          <label htmlFor="register-email" className="mb-1.5 block text-[13px] font-semibold">
+            Email
+          </label>
           <input
+            id="register-email"
             type="email"
             required
             value={email}
@@ -62,9 +68,18 @@ export function RegisterPage() {
             className="mb-4 w-full rounded-lg border border-(--color-border) px-3 py-2.5 text-sm outline-none focus:border-(--color-accent)"
           />
 
-          <label className="mb-1.5 block text-[13px] font-semibold">Password</label>
+          <label htmlFor="register-password" className="mb-1.5 block text-[13px] font-semibold">
+            Password
+          </label>
           <div className="mb-6">
-            <PasswordInput required minLength={6} value={password} onChange={setPassword} placeholder="••••••••" />
+            <PasswordInput
+              id="register-password"
+              required
+              minLength={6}
+              value={password}
+              onChange={setPassword}
+              placeholder="••••••••"
+            />
           </div>
 
           {error && <p className="mb-4 text-sm font-medium text-(--color-danger)">{error}</p>}

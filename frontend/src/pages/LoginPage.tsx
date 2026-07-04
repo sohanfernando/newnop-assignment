@@ -27,8 +27,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex h-full w-full items-center justify-center p-6">
-      <div className="w-[400px] max-w-full rounded-2xl border border-(--color-border) bg-(--color-surface) p-9 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="flex h-full w-full items-center justify-center overflow-y-auto p-4 sm:p-6">
+      <div className="w-[400px] max-w-full rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:p-9">
         <div className="mb-7 flex items-center gap-2.5">
           <div className="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-(--color-accent) text-base font-extrabold text-white">
             T
